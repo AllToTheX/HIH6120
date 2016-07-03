@@ -12,6 +12,7 @@
 #include <asm/uaccess.h>
 #include <linux/string.h>
 
+
 static char module_name[] = "HIH6120";
 static char buffer[64];
 
