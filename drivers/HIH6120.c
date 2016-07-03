@@ -13,26 +13,20 @@
 #include <linux/string.h>
 
 static char module_name[] = "HIH6120";
+static char buffer[64];
 
 static dev_t mydev;
 static struct class *c1;
 
-struct cdev my_cdev;
+static struct cdev my_cdev;
 
-int get_new_temp(int temperature)
+int get_new_temp(void)
 {
-	char tmp_nr;
-	get_random_bytes(&tmp_nr,sizeof(tmp_nr));
-	printk(KERN_INFO "Random nr: %d", tmp_nr);
-	if (tmp_nr > 128){
-		return temperature+=1;
-	}else{
-		return temperature-=1;
-	}
+	return 20;
 }
 
-int current_temp = 20;
-char temp[20];
+static int current_temp = 20;
+static char temp[20];
 
 ssize_t
 my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
@@ -41,7 +35,7 @@ my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 	int str_length;
 
     if (*f_pos == 0) { // If this is the start of the string, determine a new temperature
-    	current_temp = get_new_temp(current_temp);
+    	current_temp = get_new_temp();
     	sprintf(temp,"%d",current_temp);
     	printk(KERN_INFO "New temperature: %s\n", temp);
     }
