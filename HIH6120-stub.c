@@ -1,6 +1,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
+#include <linux/device.h>
 
 #include <linux/types.h>
 #include <linux/kdev_t.h>
@@ -14,6 +15,7 @@
 static char module_name[] = "HIH6120-stub";
 
 static dev_t mydev;
+static struct class *c1;
 static char buffer[64];
 
 struct cdev my_cdev;
@@ -73,12 +75,18 @@ static int __init chardrv_in(void)
 {
 	printk(KERN_INFO "module %s being loaded.\n",module_name);
 
+	// Allocate Major/Minor driver nr in kernel space
 	alloc_chrdev_region(&mydev, 0, 1, module_name);
 	printk(KERN_INFO "%s\n", format_dev_t(buffer, mydev));
 
+	// Register as a character driver
 	cdev_init(&my_cdev, &my_fops);
 	my_cdev.owner = THIS_MODULE;
 	cdev_add(&my_cdev, mydev, 1);
+
+	// Create user space interface
+	c1 = class_create(THIS_MODULE,module_name);
+	device_create(c1,NULL,mydev,NULL,module_name);
 
 	return 0;
 }
@@ -89,6 +97,9 @@ static void __exit chardrv_out(void)
 
 	cdev_del(&my_cdev);
 	unregister_chrdev_region(mydev, 1);
+
+	device_destroy(c1,mydev);
+	class_destroy(c1);
 }
 
 
