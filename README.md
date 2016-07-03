@@ -26,4 +26,4 @@ To make driver readable for everyone:
 * sudo ln -s /etc/udev/HIH6120-stub.rules /etc/udev/rules.d/010_HIH6120-stub.rules
 
 To do all that automatically:
-./load_HIH6120-stub.sh
+* ./load_HIH6120-stub.sh
