@@ -1,14 +1,14 @@
 # HIH6120
 kernel character driver for HIH6120 on raspberry pi
 
-Loading this module creates /dev/HIH6120 in user-space.
+Loading this module creates <code>/dev/HIH6120</code> in user-space.
 
-Reading from /dev/HIH6120 returns the measured temperature in format {x.1}
+Reading from <code>/dev/HIH6120</code> returns the measured temperature in format {x.1}
 
-Writing a '1' to /dev/HIH6120 changes the output to measured humidity in format {x.2}
+Writing a '1' to <code>/dev/HIH6120</code> changes the output to measured humidity in format {x.2}
 
 ## Stub
-When loading the stub /dev/HIH6120-stub is created
+When loading the stub <code>/dev/HIH6120-stub</code> is created
 
 The stub responds in the same way as the regular module, but increments or decrements the integer part of the returned value at random when read and won't access the I2C bus.
 
