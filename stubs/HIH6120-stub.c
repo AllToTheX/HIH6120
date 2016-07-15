@@ -35,8 +35,7 @@ int get_new_temp(int temperature)
 int current_temp = 20;
 char temp[20];
 
-ssize_t
-my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
+ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
 	int not_copied;
 	int str_length;
