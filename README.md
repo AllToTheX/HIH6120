@@ -5,7 +5,7 @@ Loading this module creates /dev/HIH6120 in user-space.
 
 Reading from /dev/HIH6120 returns the measured temperature in format {x.1}
 
-Writing a '1' to /dev/HIH6120 changes the output to measure humidity in format {x.2}
+Writing a '1' to /dev/HIH6120 changes the output to measured humidity in format {x.2}
 
 ## Stub
 When loading the stub /dev/HIH6120-stub is created
