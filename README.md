@@ -28,14 +28,15 @@ To build:
 * <code>sudo make</code>
 
 To load:
-* <code>sudo insmod HIH6120-stub.ko</code>
+* <code>sudo insmod HIH6120.ko</code>
 
 To check:
-* <code>sudo cat /dev/HIH6120-stub</code>
+* <code>sudo cat /dev/HIH6120</code>
 
-To make driver readable for everyone:
-* <code>sudo cp HIH6120-stub.rules /etc/udev/</code>
-* <code>sudo ln -s /etc/udev/HIH6120-stub.rules /etc/udev/rules.d/010_HIH6120-stub.rules</code>
+To make driver read-/write-able for everyone:
+* <code>sudo cp HIH6120.rules /etc/udev/</code>
+* <code>sudo ln -s /etc/udev/HIH6120.rules /etc/udev/rules.d/010_HIH6120.rules</code>
 
 To do all that automatically:
-* <code>./load_HIH6120-stub.sh</code>
+* <code>./HIH6120/drivers/load_HIH6120.sh</code>
+* Or: <code>./HIH6120/stubs/load_HIH6120-stub.sh</code>
