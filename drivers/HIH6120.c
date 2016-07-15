@@ -92,7 +92,7 @@ char temperature[7];
 char humidity[7];
 char ret_val[7];
 
-ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
+ssize_t hih6120_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
 	int not_copied;
 	int str_length;
@@ -124,31 +124,31 @@ ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos
     return str_length - not_copied;  // returned a  character
 }
 
-ssize_t my_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+ssize_t hih6120_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
-	char message[len+1];
-	sprintf(message, "%s", buffer);
-	printk(KERN_INFO "Received %s.\n",message);
-	switch(buffer[0]){
-		case '0':
-			ret_type = 0;
-			break;
-		case '1':
-			ret_type = 1;
-			break;
-		default:
-			ret_type = 0;
-	};
+//	char message[len+1];
+//	sprintf(message, "%s", buffer);
+//	printk(KERN_INFO "Received %s.\n",message);
+//	switch(buffer[0]){
+//		case '0':
+//			ret_type = 0;
+//			break;
+//		case '1':
+//			ret_type = 1;
+//			break;
+//		default:
+//			ret_type = 0;
+//	};
 	return len;
 }
 
 struct file_operations my_fops = {
 		.owner = THIS_MODULE,
-		.read = my_read,
-		.write = my_write,
+		.read = hih6120_read,
+		.write = hih6120_write,
 };
 
-static int __init chardrv_in(void)
+static int __init hih6120_in(void)
 {
 	printk(KERN_INFO "module %s being loaded.\n",module_name);
 	// Get i2c device
@@ -169,7 +169,7 @@ static int __init chardrv_in(void)
 	return 0;
 }
 
-static void __exit chardrv_out(void)
+static void __exit hih6120_out(void)
 {
 	printk(KERN_INFO "module %s being unloaded.\n",module_name);
 
@@ -182,8 +182,8 @@ static void __exit chardrv_out(void)
 
 
 
-module_init(chardrv_in)
-module_exit(chardrv_out)
+module_init(hih6120_in)
+module_exit(hih6120_out)
 
 
 MODULE_AUTHOR("Allex Veldman");
