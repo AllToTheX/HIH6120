@@ -1,10 +1,19 @@
 # HIH6120
-kernel driver for HIH6120 on raspberry pi
+kernel character driver for HIH6120 on raspberry pi
 
-For now only includes the stub.
-Stub starts at value 20 when loaded and randomly adds or substracts 1 when read.
+Loading this module creates /dev/HIH6120 in user-space.
 
-## Next steps are all executed on the raspberry pi
+Reading from /dev/HIH6120 returns the measured temperature in format {x.1}
+
+Writing a '1' to /dev/HIH6120 changes the output to measure humidity in format {x.2}
+
+## Stub
+When loading the stub /dev/HIH6120-stub is created
+
+The stub responds in the same way as the regular module, but increments or decrements the integer part of the returned value at random when read and won't access the I2C bus.
+
+## Compiling the module
+Note: The following steps are all executed from the Raspberry Pi
 
 Clone repo:
 * <code>git clone https://github.com/AllToTheX/HIH6120.git</code>
