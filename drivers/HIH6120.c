@@ -18,6 +18,10 @@
 #define HIH6120_STALE 0x01
 #define HIH6120_COMM 0x02
 #define HIH6120_TIMEOUT 0xFF
+#define HIH6120_HUMID 0x00
+#define HIH6120_TEMP 0x01
+
+char ret_type = HIH6120_TEMP;
 
 #define I2C_MAX 100
 
@@ -31,7 +35,7 @@ static char buffer[64];
 struct cdev my_cdev;
 struct i2c_adapter *i2c_adap;
 
-char ret_type = 0;
+
 
 char buf[5];
 static struct i2c_msg rd_msg = {
@@ -75,14 +79,14 @@ char get_hum_temp(char *humid, char *temp)
 	humidity = (humidity * 10000) / 16382;
 	humid_int = humidity / 100;
 	humid_dec = humidity % 100;
-	sprintf(temp,"%d.%d",humid_int,humid_dec);
-	printk(KERN_INFO "humidity: %s %%\n",temp);
+	sprintf(humid,"%d.%d",humid_int,humid_dec);
+	printk(KERN_INFO "humidity: %s %%\n",humid);
 
 	temperature = (buf[2] << 6) | (buf[3] >> 2);
 	temperature = (temperature * 1650) / 16382;
 	temp_int = temperature / 10 - 40;
 	temp_dec = temperature % 10;
-	sprintf(humid,"%d.%d",temp_int,temp_dec);
+	sprintf(temp,"%d.%d",temp_int,temp_dec);
 	printk(KERN_INFO "temperature: %s C\n",temp);
 
 	return state;
@@ -98,12 +102,20 @@ ssize_t hih6120_read(struct file *filp, char __user *buf, size_t count, loff_t *
 	int str_length;
 	char state;
 
-    if (*f_pos == 0) { // If this is the start of the string, determine a new temperature
+    if (*f_pos == 0) { // If this is the start of the string, determine the new temperature
     	state = get_hum_temp(humidity,temperature);
     	if ( state != HIH6120_OK){
     		return -state;
     	}
-    	sprintf(ret_val,"%s",temperature);
+    	switch(ret_type){
+			case HIH6120_HUMID:
+				sprintf(ret_val,"%s",humidity);
+				break;
+			case HIH6120_TEMP:
+			default:
+				sprintf(ret_val,"%s",temperature);
+    	}
+
     }
 
     if (ret_val[*f_pos] == '\0') {
@@ -124,21 +136,30 @@ ssize_t hih6120_read(struct file *filp, char __user *buf, size_t count, loff_t *
     return str_length - not_copied;  // returned a  character
 }
 
-ssize_t hih6120_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+ssize_t hih6120_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
-//	char message[len+1];
-//	sprintf(message, "%s", buffer);
-//	printk(KERN_INFO "Received %s.\n",message);
-//	switch(buffer[0]){
-//		case '0':
-//			ret_type = 0;
-//			break;
-//		case '1':
-//			ret_type = 1;
-//			break;
-//		default:
-//			ret_type = 0;
-//	};
+	char message[len+1];
+	int i;
+	for ( i=0; i < len; i++ ){
+		if ( buffer[*offset+i] == '\n'){
+			break;
+		}
+		message[i] = buffer[*offset+i];
+	}
+	message[i] = '\0';
+
+	printk(KERN_INFO "Received %s.\n",message);
+	if( strlen(message) == 1)
+	{
+		switch(message[0]){
+				case '1':
+					ret_type = HIH6120_HUMID;
+					break;
+				case '0':
+				default:
+					ret_type = HIH6120_TEMP;
+			};
+	}
 	return len;
 }
 

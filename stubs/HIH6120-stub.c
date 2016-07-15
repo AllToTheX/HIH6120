@@ -12,6 +12,15 @@
 #include <asm/uaccess.h>
 #include <linux/string.h>
 
+#define HIH6120_OK 0x00
+#define HIH6120_STALE 0x01
+#define HIH6120_COMM 0x02
+#define HIH6120_TIMEOUT 0xFF
+#define HIH6120_HUMID 0x00
+#define HIH6120_TEMP 0x01
+
+char ret_type = HIH6120_TEMP;
+
 static char module_name[] = "HIH6120-stub";
 
 static dev_t mydev;
@@ -20,20 +29,26 @@ static char buffer[64];
 
 struct cdev my_cdev;
 
-int get_new_temp(int temperature)
+void get_new_temp(char *temperature, char *humidity)
 {
 	char tmp_nr;
 	get_random_bytes(&tmp_nr,sizeof(tmp_nr));
 	printk(KERN_INFO "Random nr: %d", tmp_nr);
 	if (tmp_nr > 128){
-		return temperature+=1;
+		*temperature+=1;
+		*humidity+=1;
 	}else{
-		return temperature-=1;
+		*temperature-=1;
+		*humidity-=1;
 	}
 }
 
-int current_temp = 20;
-char temp[20];
+
+char temp_int = 20;
+char temp_dec = 5;
+char humid_int = 42;
+char humid_dec = 23;
+char ret_val[20];
 
 ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
@@ -41,20 +56,27 @@ ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos
 	int str_length;
 
     if (*f_pos == 0) { // If this is the start of the string, determine a new temperature
-    	current_temp = get_new_temp(current_temp);
-    	sprintf(temp,"%d",current_temp);
-    	printk(KERN_INFO "New temperature: %s\n", temp);
+    	get_new_temp(&temp_int,&humid_int);
+    	switch(ret_type){
+			case HIH6120_HUMID:
+				sprintf(ret_val,"%d.%d",humid_int,humid_dec);
+				break;
+			case HIH6120_TEMP:
+			default:
+				sprintf(ret_val,"%d.%d",temp_int,temp_dec);
+		}
+    	printk(KERN_INFO "New value to return: %s\n", ret_val);
     }
 
 
-    if (temp[*f_pos] == '\0') {
+    if (ret_val[*f_pos] == '\0') {
         printk(KERN_INFO "End of string, returning zero.\n");
         *f_pos = 0;
         return 0;
     }
 
-    str_length = strlen(&temp[*f_pos]);
-    not_copied = copy_to_user(buf, &temp[*f_pos], str_length);
+    str_length = strlen(&ret_val[*f_pos]);
+    not_copied = copy_to_user(buf, &ret_val[*f_pos], str_length);
     if (not_copied == 0)
     {
     	*f_pos += str_length;
@@ -65,9 +87,37 @@ ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos
     return str_length - not_copied;  // returned a  character
 }
 
+ssize_t my_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+{
+	char message[len+1];
+	int i;
+	for ( i=0; i < len; i++ ){
+		if ( buffer[*offset+i] == '\n'){
+			break;
+		}
+		message[i] = buffer[*offset+i];
+	}
+	message[i] = '\0';
+
+	printk(KERN_INFO "Received %s.\n",message);
+	if( strlen(message) == 1)
+	{
+		switch(message[0]){
+				case '1':
+					ret_type = HIH6120_HUMID;
+					break;
+				case '0':
+				default:
+					ret_type = HIH6120_TEMP;
+			};
+	}
+	return len;
+}
+
 struct file_operations my_fops = {
 		.owner = THIS_MODULE,
 		.read = my_read,
+		.write = my_write,
 };
 
 static int __init chardrv_in(void)
