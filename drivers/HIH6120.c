@@ -24,6 +24,7 @@
 char ret_type = HIH6120_TEMP;
 
 #define I2C_MAX 100
+#define HIH6120_ADDR 0x27
 
 static char module_name[] = "HIH6120";
 static char i2c_dev = 1;
@@ -39,14 +40,14 @@ struct i2c_adapter *i2c_adap;
 
 char buf[5];
 static struct i2c_msg rd_msg = {
-		.addr = 0x27,
+		.addr = HIH6120_ADDR,
 		.flags = I2C_M_RD,
 		.len = 4,
 		.buf = buf,
 };
 
 static struct i2c_msg meas_rq = {
-		.addr = 0x27,
+		.addr = HIH6120_ADDR,
 		.flags = 0,
 		.len = 0,
 		.buf = buf,
@@ -61,16 +62,19 @@ char get_hum_temp(char *humid, char *temp)
 	int temperature;
 	char temp_int;
 	char temp_dec;
-	char timeout = 0;
+	int timeout = 0;
 
 	i2c_transfer(i2c_adap,&meas_rq,1);
+	mdelay(40); // According to data sheet a typical measure cycle takes 36.65ms, give it 40
 	do {
+		udelay(1000); // if that was not enough try again every 1ms for 100 times
 		i2c_transfer(i2c_adap,&rd_msg,1);
+//		printk(KERN_INFO "Buf: %X %X %X %X \n",buf[0],buf[1],buf[2],buf[3]); // print buffer content
 		state = (buf[0] >> 6) & 0x03 ;
 		timeout++;
 	} while ( (state != 0) && (timeout < I2C_MAX) );
 	if (timeout >= I2C_MAX) {
-		printk(KERN_INFO "Sensor timed out after %d tries \n",timeout);
+		printk(KERN_INFO "Sensor timed out after %d tries with state: %d \n",timeout,state);
 		state = HIH6120_TIMEOUT;
 	}
 	printk(KERN_INFO "State: %d\n",state);
@@ -86,7 +90,7 @@ char get_hum_temp(char *humid, char *temp)
 	temperature = (temperature * 1650) / 16382;
 	temp_int = temperature / 10 - 40;
 	temp_dec = temperature % 10;
-	sprintf(temp,"%d.%d",temp_int,temp_dec);
+	sprintf(temp,"%d.%d",temp_int, temp_dec);
 	printk(KERN_INFO "temperature: %s C\n",temp);
 
 	return state;
@@ -148,15 +152,16 @@ ssize_t hih6120_write(struct file *filep, const char __user *buffer, size_t len,
 	}
 	message[i] = '\0';
 
-	printk(KERN_INFO "Received %s.\n",message);
 	if( strlen(message) == 1)
 	{
 		switch(message[0]){
 				case '1':
+					printk(KERN_INFO "Output set to Humidity\n");
 					ret_type = HIH6120_HUMID;
 					break;
 				case '0':
 				default:
+					printk(KERN_INFO "Output set to Temperature\n");
 					ret_type = HIH6120_TEMP;
 			};
 	}
@@ -182,6 +187,10 @@ static int __init hih6120_in(void)
 	cdev_init(&my_cdev, &my_fops);
 	my_cdev.owner = THIS_MODULE;
 	cdev_add(&my_cdev, mydev, 1);
+
+	sprintf(humidity,"0.0");
+	sprintf(temperature,"0.0");
+	sprintf(ret_val,"0.0");
 
 	// Create user space interface
 	c1 = class_create(THIS_MODULE,module_name);

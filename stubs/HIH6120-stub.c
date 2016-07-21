@@ -33,7 +33,6 @@ void get_new_temp(char *temperature, char *humidity)
 {
 	char tmp_nr;
 	get_random_bytes(&tmp_nr,sizeof(tmp_nr));
-	printk(KERN_INFO "Random nr: %d", tmp_nr);
 	if (tmp_nr > 128){
 		*temperature+=1;
 		*humidity+=1;
@@ -68,9 +67,8 @@ ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos
     	printk(KERN_INFO "New value to return: %s\n", ret_val);
     }
 
-
+    // End of string
     if (ret_val[*f_pos] == '\0') {
-        printk(KERN_INFO "End of string, returning zero.\n");
         *f_pos = 0;
         return 0;
     }
@@ -99,15 +97,17 @@ ssize_t my_write(struct file *filep, const char __user *buffer, size_t len, loff
 	}
 	message[i] = '\0';
 
-	printk(KERN_INFO "Received %s.\n",message);
+	printk(KERN_INFO "Received %s\n",message);
 	if( strlen(message) == 1)
 	{
 		switch(message[0]){
 				case '1':
+					printk(KERN_INFO "Output set to Humidity\n");
 					ret_type = HIH6120_HUMID;
 					break;
 				case '0':
 				default:
+					printk(KERN_INFO "Output set to Temperature\n");
 					ret_type = HIH6120_TEMP;
 			};
 	}
