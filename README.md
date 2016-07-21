@@ -20,7 +20,7 @@ Clone repo:
 
 Install Curses and rpi-source:
 
-* <code>sudo apt-get install libncurses5-dev</code>
+* <code>sudo apt-get install libncurses5-dev bc</code>
 * <code>sudo wget https://raw.githubusercontent.com/notro/rpi-source/master/rpi-source -O /usr/bin/rpi-source && sudo chmod +x /usr/bin/rpi-source && /usr/bin/rpi-source -q --tag-update</code>
 * <code>sudo rpi-source</code>
 
