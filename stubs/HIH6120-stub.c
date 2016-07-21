@@ -29,7 +29,7 @@ static char buffer[64];
 
 struct cdev my_cdev;
 
-void get_new_temp(char *temperature, char *humidity)
+void get_new_temp(int *temperature, char *humidity)
 {
 	char tmp_nr;
 	get_random_bytes(&tmp_nr,sizeof(tmp_nr));
@@ -43,7 +43,7 @@ void get_new_temp(char *temperature, char *humidity)
 }
 
 
-char temp_int = 20;
+int temp_int = 20;
 char temp_dec = 5;
 char humid_int = 42;
 char humid_dec = 23;
