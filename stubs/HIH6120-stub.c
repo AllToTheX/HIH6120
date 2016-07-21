@@ -29,23 +29,22 @@ static char buffer[64];
 
 struct cdev my_cdev;
 
-void get_new_temp(int *temperature, char *humidity)
+int get_new_value(int value)
 {
 	char tmp_nr;
 	get_random_bytes(&tmp_nr,sizeof(tmp_nr));
 	if (tmp_nr > 128){
-		*temperature+=1;
-		*humidity+=1;
+		value+=1;
 	}else{
-		*temperature-=1;
-		*humidity-=1;
+		value-=1;
 	}
+	return value;
 }
 
 
 int temp_int = 20;
 char temp_dec = 5;
-char humid_int = 42;
+int humid_int = 42;
 char humid_dec = 23;
 char ret_val[20];
 
@@ -55,13 +54,14 @@ ssize_t my_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos
 	int str_length;
 
     if (*f_pos == 0) { // If this is the start of the string, determine a new temperature
-    	get_new_temp(&temp_int,&humid_int);
     	switch(ret_type){
 			case HIH6120_HUMID:
+				humid_int = get_new_value(humid_int);
 				sprintf(ret_val,"%d.%d",humid_int,humid_dec);
 				break;
 			case HIH6120_TEMP:
 			default:
+				temp_int = get_new_value(temp_int);
 				sprintf(ret_val,"%d.%d",temp_int,temp_dec);
 		}
     	printk(KERN_INFO "New value to return: %s\n", ret_val);
