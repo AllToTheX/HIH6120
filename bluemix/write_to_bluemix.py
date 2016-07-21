@@ -12,6 +12,12 @@ def setupBluemix():
     auth_method = 'token'
     auth_token = 'raspi123'
     
+    print(" Organization:\t\t%s\n" % org,
+          "Type:\t\t\t%s\n" % type,
+          "ID:\t\t\t%s\n" % id,
+          "Authentication Method:\t%s\n" % auth_method,
+          "Authentication Token:\t%s\n" % auth_token)
+    
     deviceOptions = {
                       'org':org,
                       'type':type,
@@ -28,6 +34,7 @@ def main():
     print(chr(27) + "[2J")
     HIH6120 = '/dev/HIH6120-stub'
     bluemix = setupBluemix()
+    print("#\tTemperature:\tHumidity:")
     i = 0
     while True:
         i += 1
@@ -46,7 +53,7 @@ def main():
         HIH6120data = {"Temperature": temp,
                        "Humidity": humid }
         if bluemix.publishEvent("HIH6120", 'json', HIH6120data):
-            print('\r', i, temp, humid, '          ', end="")
+            print('\r%d\t%s\t\t%s\t' %( i, temp, humid), end="")
         else:
             print("Event Publish failed :-(")
         sys.stdout.flush()
